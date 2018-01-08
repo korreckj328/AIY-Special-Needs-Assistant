@@ -41,31 +41,31 @@ def main():
         button.wait_for_press()
         text = recognizer.recognize()
         if text is None:
-            os.system('aplay /home/pi/Special-Needs-Assistant/beep.wav')
+            os.system('aplay /home/pi/AIY-Special-Needs-Assistant/beep.wav')
         else:
             if 'turn on the light' in text:
                 led.set_state(aiy.voicehat.LED.ON)
             elif 'switch to the vacation schedule' in text:
-                os.system('aplay /home/pi/Special-Needs-Assistant/vacation.wav')
-                os.system('crontab /home/pi/Special-Needs-Assistant/vacationcron.bak')
+                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/vacation.wav')
+                os.system('crontab /home/pi/AIY-Special-Needs-Assistant/vacationcron.bak')
             elif 'switch to the school schedule' in text:
-                os.system('aplay /home/pi/Special-Needs-Assistant/school.wav')
-                os.system('crontab /home/pi/Special-Needs-Assistant/schooldayscron.bak')
+                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/school.wav')
+                os.system('crontab /home/pi/AIY-Special-Needs-Assistant/schooldayscron.bak')
             elif 'turn off the light' in text:
                 led.set_state(aiy.voicehat.LED.OFF)
             elif 'blink' in text:
                 led.set_state(aiy.voicehat.LED.BLINK)
             elif 'shutdown' in text:
-                os.system('aplay /home/pi/Special-Needs-Assistant/shutdown.wav')
+                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/shutdown.wav')
                 os.system('sudo shutdown -h now')
             elif 'turn off' in text:
-                os.system('aplay /home/pi/Special-Needs-Assistant/shutdown.wav')
+                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/shutdown.wav')
                 os.system('sudo shutdown -h now')
             elif 'reboot' in text:
-                os.system('aplay /home/pi/Special-Needs-Assistant/restarting.wav')
+                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/restarting.wav')
                 os.system('sudo reboot')
             elif 'restart' in text:
-                os.system('aplay /home/pi/Special-Needs-Assistant/restarting.wav')
+                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/restarting.wav')
                 os.system('sudo reboot')
             elif 'goodbye' in text:
                 break
