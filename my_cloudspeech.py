@@ -20,6 +20,58 @@ import aiy.cloudspeech
 import aiy.voicehat
 import os
 
+def rtime():
+    recognizer = aiy.cloudspeech.get_recognizer()
+    button = aiy.voicehat.get_button()
+    aiy.audio.say('What time would you like the reminder',volume=10)
+    button.wait_for_press()
+    time = recognizer.recognize(immediate=True)
+    if len(time) == 1:
+        time = time+':00'
+    elif len(time) == 2:
+        time = time+':00'
+    elif len(time) == 3:
+        time = time[0]+':'+time[1]+time[2]
+    time = time.split(':')
+    aiy.audio.say('A M or P M?',volume=10)
+    button.wait_for_press()
+    ampm = recognizer.recognize(immediate=True)
+    if ampm == 'p.m.':
+        time[0] = str(int(time[0]) + 12)
+    aiy.audio.say('Repeat on what days?  You can say every day, week days, weekends, or a specific day.',volume=10)
+    button.wait_for_press()
+    days = recognizer.recognize(immediate=True)
+    if days == 'everyday':
+        days = '*'
+    elif days == 'weekdays':
+        days = 'MON,TUE,WED,THU,FRI'
+    elif days == 'weekends':
+        days = 'SAT,SUN'
+    elif days == 'Monday':
+        days = 'MON'
+    elif days == 'Tuesday':
+        days = 'TUE'
+    elif days == 'Wednesday':
+        days = 'WED'
+    elif days == 'Thursday':
+        days = 'THU'
+    elif days == 'Friday':
+        days = 'FRI'
+    elif days == 'Saturday':
+        days = 'SAT'
+    elif days == 'Sunday':
+        days = 'SUN'
+    crontime = '{:s} {:s} * * {:s} '.format(time[1],time[0],days)
+    return crontime
+
+def rmessage():
+    recognizer = aiy.cloudspeech.get_recognizer()
+    button = aiy.voicehat.get_button()
+    aiy.audio.say('What would you like the reminder to say?',volume=10)
+    button.wait_for_press()
+    message = recognizer.recognize(immediate=True)
+    return message
+
 def main():
     recognizer = aiy.cloudspeech.get_recognizer()
     recognizer.expect_phrase('turn off the light')
@@ -32,6 +84,7 @@ def main():
     recognizer.expect_phrase('switch to the vacation schedule')
     recognizer.expect_phrase('switch to the school schedule')
     recognizer.expect_phrase('goodbye')
+    recognizer.expect_phrase('add a reminder')
 
     button = aiy.voicehat.get_button()
     led = aiy.voicehat.get_led()
@@ -41,31 +94,36 @@ def main():
         button.wait_for_press()
         text = recognizer.recognize()
         if text is None:
-            os.system('aplay /home/pi/AIY-Special-Needs-Assistant/beep.wav')
+            aiy.audio.say('I am sorry, I did not catch that.',volume=10)
         else:
+            if 'add a reminder' in text:
+                time = rtime()
+                message = rmessage()
+                cronline = '{:s} /home/pi/AIY-projects-python/src/examples/voice/reminder_playback.py "{:s}"\n'.format(time,message)
+                with open('/home/pi/schedule.cronbak','a') as f:
+                    f.write(cronline)
+                os.system('crontab /home/pi/schedule.cronbak')
             if 'turn on the light' in text:
                 led.set_state(aiy.voicehat.LED.ON)
             elif 'switch to the vacation schedule' in text:
-                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/vacation.wav')
-                os.system('crontab /home/pi/AIY-Special-Needs-Assistant/vacationcron.bak')
+                aiy.audio.say('This function is not yet implemented.',volume=10)
             elif 'switch to the school schedule' in text:
-                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/school.wav')
-                os.system('crontab /home/pi/AIY-Special-Needs-Assistant/schooldayscron.bak')
+                aiy.audio.say('This function is not yet implemented.',volume=10)
             elif 'turn off the light' in text:
                 led.set_state(aiy.voicehat.LED.OFF)
             elif 'blink' in text:
                 led.set_state(aiy.voicehat.LED.BLINK)
             elif 'shutdown' in text:
-                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/shutdown.wav')
+                aiy.audio.say("Shutting down",volume=10)
                 os.system('sudo shutdown -h now')
             elif 'turn off' in text:
-                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/shutdown.wav')
+                aiy.audio.say("Shutting down",volume=10)
                 os.system('sudo shutdown -h now')
             elif 'reboot' in text:
-                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/restarting.wav')
+                aiy.audio.say("Restarting",volume=10)
                 os.system('sudo reboot')
             elif 'restart' in text:
-                os.system('aplay /home/pi/AIY-Special-Needs-Assistant/restarting.wav')
+                aiy.audio.say("Restarting",volume=10)
                 os.system('sudo reboot')
             elif 'goodbye' in text:
                 break
