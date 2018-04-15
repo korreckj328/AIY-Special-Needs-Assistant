@@ -1,0 +1,13 @@
+[Unit]
+Description=AIY Special Needs Assistant App
+
+[Service]
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStart=/bin/bash -c 'python3 -u src/examples/voice/my_cloudspeech.py'
+WorkingDirectory=/home/pi/AIY-projects-python
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+
