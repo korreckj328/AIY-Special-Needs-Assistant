@@ -19,13 +19,18 @@ import aiy.audio
 import aiy.cloudspeech
 import aiy.voicehat
 import os
+import socket
+import time
 
 def rtime():
     recognizer = aiy.cloudspeech.get_recognizer()
     button = aiy.voicehat.get_button()
     aiy.audio.say('What time would you like the reminder',volume=10)
-    button.wait_for_press()
-    time = recognizer.recognize(immediate=True)
+    while True:
+        button.wait_for_press()
+        time = recognizer.recognize(immediate=True)
+        if time is not None:
+            break
     if len(time) == 1:
         time = time+':00'
     elif len(time) == 2:
@@ -34,43 +39,79 @@ def rtime():
         time = time[0]+':'+time[1]+time[2]
     time = time.split(':')
     aiy.audio.say('A M or P M?',volume=10)
-    button.wait_for_press()
-    ampm = recognizer.recognize(immediate=True)
+    while True:
+        button.wait_for_press()
+        ampm = recognizer.recognize(immediate=True)
+        if ampm == 'a.m.' or ampm == 'p.m.':
+            break
     if ampm == 'p.m.':
         time[0] = str(int(time[0]) + 12)
-    aiy.audio.say('Repeat on what days?  You can say every day, week days, weekends, or a specific day.',volume=10)
-    button.wait_for_press()
-    days = recognizer.recognize(immediate=True)
-    if days == 'everyday':
-        days = '*'
-    elif days == 'weekdays':
-        days = 'MON,TUE,WED,THU,FRI'
-    elif days == 'weekends':
-        days = 'SAT,SUN'
-    elif days == 'Monday':
-        days = 'MON'
-    elif days == 'Tuesday':
-        days = 'TUE'
-    elif days == 'Wednesday':
-        days = 'WED'
-    elif days == 'Thursday':
-        days = 'THU'
-    elif days == 'Friday':
-        days = 'FRI'
-    elif days == 'Saturday':
-        days = 'SAT'
-    elif days == 'Sunday':
-        days = 'SUN'
+    aiy.audio.say('Repeat on what days?  You can say every day, week days',volume=10)
+    aiy.audio.say('weekends, or a specific day.',volume=10)
+    while True:
+        button.wait_for_press()
+        days = recognizer.recognize(immediate=True)
+        if days == 'everyday':
+            days = '*'
+            break
+        elif days == 'weekdays':
+            days = 'MON,TUE,WED,THU,FRI'
+            break
+        elif days == 'weekends':
+            days = 'SAT,SUN'
+            break
+        elif days == 'Mondays':
+            days = 'MON'
+            break
+        elif days == 'Tuesdays':
+            days = 'TUE'
+            break
+        elif days == 'Wednesdays':
+            days = 'WED'
+            break
+        elif days == 'Thursdays':
+            days = 'THU'
+            break
+        elif days == 'Fridays':
+            days = 'FRI'
+            break
+        elif days == 'Saturdays':
+            days = 'SAT'
+            break
+        elif days == 'Sundays':
+            days = 'SUN'
+            break
+        else:
+            aiy.audio.say('Repeat on what days?  You can say every day, week days',volume=10)
+            aiy.audio.say('weekends, or a specific day.',volume=10)
     crontime = '{:s} {:s} * * {:s} '.format(time[1],time[0],days)
     return crontime
 
 def rmessage():
     recognizer = aiy.cloudspeech.get_recognizer()
-    button = aiy.voicehat.get_button()
-    aiy.audio.say('What would you like the reminder to say?',volume=10)
-    button.wait_for_press()
-    message = recognizer.recognize(immediate=True)
-    return message
+    while True:
+        button = aiy.voicehat.get_button()
+        aiy.audio.say('What would you like the reminder to say?',volume=10)
+        button.wait_for_press()
+        message = recognizer.recognize(immediate=True)
+        if message is not None:
+            return message
+
+def internet(host="8.8.8.8", port=53, timeout=3):
+    """
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    """
+    led = aiy.voicehat.get_led()
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        led.set_state(aiy.voicehat.LED.ON)
+    except:
+        led.set_state(aiy.voicehat.LED.BLINK)
+
+
 
 def main():
     recognizer = aiy.cloudspeech.get_recognizer()
@@ -87,10 +128,10 @@ def main():
     recognizer.expect_phrase('add a reminder')
 
     button = aiy.voicehat.get_button()
-    led = aiy.voicehat.get_led()
     aiy.audio.get_recorder().start()
 
     while True:
+        internet()
         button.wait_for_press()
         text = recognizer.recognize()
         if text is None:
@@ -103,16 +144,11 @@ def main():
                 with open('/home/pi/schedule.cronbak','a') as f:
                     f.write(cronline)
                 os.system('crontab /home/pi/schedule.cronbak')
-            if 'turn on the light' in text:
-                led.set_state(aiy.voicehat.LED.ON)
+                aiy.audio.say('Your reminder is now set',volume=10)
             elif 'switch to the vacation schedule' in text:
                 aiy.audio.say('This function is not yet implemented.',volume=10)
             elif 'switch to the school schedule' in text:
                 aiy.audio.say('This function is not yet implemented.',volume=10)
-            elif 'turn off the light' in text:
-                led.set_state(aiy.voicehat.LED.OFF)
-            elif 'blink' in text:
-                led.set_state(aiy.voicehat.LED.BLINK)
             elif 'shutdown' in text:
                 aiy.audio.say("Shutting down",volume=10)
                 os.system('sudo shutdown -h now')
