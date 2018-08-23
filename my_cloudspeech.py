@@ -22,10 +22,12 @@ import os
 import socket
 import time
 
+currentVolume = 20
+
 def rtime():
     recognizer = aiy.cloudspeech.get_recognizer()
     button = aiy.voicehat.get_button()
-    aiy.audio.say('What time would you like the reminder',volume=10)
+    aiy.audio.say('What time would you like the reminder',volume=currentVolume)
     while True:
         button.wait_for_press()
         time = recognizer.recognize(immediate=True)
@@ -46,8 +48,8 @@ def rtime():
             break
     if ampm == 'p.m.':
         time[0] = str(int(time[0]) + 12)
-    aiy.audio.say('Repeat on what days?  You can say every day, week days',volume=10)
-    aiy.audio.say('weekends, or a specific day.',volume=10)
+    aiy.audio.say('Repeat on what days?  You can say every day, week days',volume=currentVolume)
+    aiy.audio.say('weekends, or a specific day.',volume=currentVolume)
     while True:
         button.wait_for_press()
         days = recognizer.recognize(immediate=True)
@@ -82,16 +84,16 @@ def rtime():
             days = 'SUN'
             break
         else:
-            aiy.audio.say('Repeat on what days?  You can say every day, week days',volume=10)
-            aiy.audio.say('weekends, or a specific day.',volume=10)
-    crontime = '{:s} {:s} * * {:s} '.format(time[1],time[0],days)
+            aiy.audio.say('Repeat on what days?  You can say every day, week days',volume=currentVolume)
+            aiy.audio.say('weekends, or a specific day.',volume=currentVolume)
+    crontime = '{:s} {:s} * * {:s}'.format(time[1],time[0],days)
     return crontime
 
 def rmessage():
     recognizer = aiy.cloudspeech.get_recognizer()
     while True:
         button = aiy.voicehat.get_button()
-        aiy.audio.say('What would you like the reminder to say?',volume=10)
+        aiy.audio.say('What would you like the reminder to say?',volume=currentVolume)
         button.wait_for_press()
         message = recognizer.recognize(immediate=True)
         if message is not None:
@@ -115,9 +117,6 @@ def internet(host="8.8.8.8", port=53, timeout=3):
 
 def main():
     recognizer = aiy.cloudspeech.get_recognizer()
-    recognizer.expect_phrase('turn off the light')
-    recognizer.expect_phrase('turn on the light')
-    recognizer.expect_phrase('blink')
     recognizer.expect_phrase('shutdown')
     recognizer.expect_phrase('restart')
     recognizer.expect_phrase('turn off')
@@ -126,16 +125,28 @@ def main():
     recognizer.expect_phrase('switch to the school schedule')
     recognizer.expect_phrase('goodbye')
     recognizer.expect_phrase('add a reminder')
+    recognizer.expect_phrase('help')
+    recognizer.expect_phrase('clear all reminders')
 
     button = aiy.voicehat.get_button()
     aiy.audio.get_recorder().start()
-
+    
+    testarray = []
+    try:
+        with open('/home/pi/schedule.cronbak','r') as f:
+            for line in f:
+                testarray.append(line)
+        print(testarray)
+    except:
+        with open('/home/pi/schedule.cronbak','w') as f:
+            f.write('XDG_RUNTIME_DIR=/run/user/1000')
+    
     while True:
         internet()
         button.wait_for_press()
         text = recognizer.recognize()
         if text is None:
-            aiy.audio.say('I am sorry, I did not catch that.',volume=10)
+            aiy.audio.say('I am sorry, I did not catch that, for help say help.',volume=currentVolume)
         else:
             if 'add a reminder' in text:
                 time = rtime()
@@ -144,25 +155,33 @@ def main():
                 with open('/home/pi/schedule.cronbak','a') as f:
                     f.write(cronline)
                 os.system('crontab /home/pi/schedule.cronbak')
-                aiy.audio.say('Your reminder is now set',volume=10)
+                aiy.audio.say('Your reminder is now set',volume=currentVolume)
             elif 'switch to the vacation schedule' in text:
-                aiy.audio.say('This function is not yet implemented.',volume=10)
+                aiy.audio.say('This function is not yet implemented.',volume=currentVolume)
             elif 'switch to the school schedule' in text:
-                aiy.audio.say('This function is not yet implemented.',volume=10)
+                aiy.audio.say('This function is not yet implemented.',volume=currentVolume)
             elif 'shutdown' in text:
-                aiy.audio.say("Shutting down",volume=10)
+                aiy.audio.say("Shutting down",volume=currentVolume)
                 os.system('sudo shutdown -h now')
             elif 'turn off' in text:
-                aiy.audio.say("Shutting down",volume=10)
+                aiy.audio.say("Shutting down",volume=currentVolume)
                 os.system('sudo shutdown -h now')
             elif 'reboot' in text:
-                aiy.audio.say("Restarting",volume=10)
+                aiy.audio.say("Restarting",volume=currentVolume)
                 os.system('sudo reboot')
             elif 'restart' in text:
-                aiy.audio.say("Restarting",volume=10)
+                aiy.audio.say("Restarting",volume=currentVolume)
                 os.system('sudo reboot')
-            elif 'goodbye' in text:
-                break
+            elif 'clear all reminders' in text:
+                os.system('crontab -r')
+                with open('/home/pi/schedule.cronbak','w') as f:
+                    f.write('XDG_RUNTIME_DIR=/run/user/1000')
+                aiy.audio.say("All reminders deleted")
+            elif 'help' in text:
+                aiy.audio.say("To add a reminder say, add a reminder.", volume=currentVolume)
+                aiy.audio.say("To delete all reminders say, clear all reminders.", volume=currentVolume)
+                aiy.audio.say("To shut down the system, say shut down or turn off", volume=currentVolume)
+                aiy.audio.say("To restart the system, say reboot or restart", volume=currentVolume)
 
 
 if __name__ == '__main__':

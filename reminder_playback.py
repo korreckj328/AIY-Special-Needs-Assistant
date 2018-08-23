@@ -5,5 +5,5 @@ import aiy.cloudspeech
 import aiy.voicehat
 
 name = sys.argv[1]
-aiy.audio.say(name,volume=10)
+aiy.audio.say(name,volume=20)
 
