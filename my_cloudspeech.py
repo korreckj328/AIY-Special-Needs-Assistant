@@ -139,7 +139,7 @@ def main():
         print(testarray)
     except:
         with open('/home/pi/schedule.cronbak','w') as f:
-            f.write('XDG_RUNTIME_DIR=/run/user/1000')
+            f.write('XDG_RUNTIME_DIR=/run/user/1000\n')
     
     while True:
         internet()
