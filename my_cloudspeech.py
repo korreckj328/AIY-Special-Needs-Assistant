@@ -175,7 +175,7 @@ def main():
             elif 'clear all reminders' in text:
                 os.system('crontab -r')
                 with open('/home/pi/schedule.cronbak','w') as f:
-                    f.write('XDG_RUNTIME_DIR=/run/user/1000')
+                    f.write('XDG_RUNTIME_DIR=/run/user/1000\n')
                 aiy.audio.say("All reminders deleted")
             elif 'help' in text:
                 aiy.audio.say("To add a reminder say, add a reminder.", volume=currentVolume)
