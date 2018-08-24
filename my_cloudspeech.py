@@ -22,9 +22,45 @@ import os
 import socket
 import time
 
-currentVolume = 20
+class assistantSettings:
+    def __init__(self):
+        settingsArray = []
+        try:
+            with open('/home/pi/.SpecialNeeds.config','r') as f:
+                for line in f:
+                    settingsArray.append(line)
+        except:
+            with open('/home/pi/.SpecialNeeds.config','w') as f:
+                f.write('20\n')
+                f.write('vacation')
+            settingsArray.append('20')
+            settingsArray.append('vacation')
+        self.__volume = int(settingsArray[0])
+        self.__schedule = settingsArray[1]
+    
+    def setVolume(self, volume):
+        self.__volume = volume
+    
+    def getVolume(self):
+        return self.__volume
+    
+    def setSchedule(self, schedule):
+        self.__schedule = schedule
+    
+    def getSchedule(self):
+        return self.__schedule
+    
+    def save(self):
+        volumeString = str(self.__volume) + '\n'
+        with open('/home/pi/.SpecialNeeds.config','w') as f:
+            f.write(volumeString)
+            f.write(self.__schedule)
+    
+    
 
-def rtime():
+def rtime(settings):
+    currentVolume = settings.getVolume()
+    schedule = settings.getSchedule()
     recognizer = aiy.cloudspeech.get_recognizer()
     button = aiy.voicehat.get_button()
     aiy.audio.say('What time would you like the reminder',volume=currentVolume)
@@ -89,7 +125,9 @@ def rtime():
     crontime = '{:s} {:s} * * {:s}'.format(time[1],time[0],days)
     return crontime
 
-def rmessage():
+def rmessage(settings):
+    currentVolume = settings.getVolume()
+    schedule = settings.getSchedule()
     recognizer = aiy.cloudspeech.get_recognizer()
     while True:
         button = aiy.voicehat.get_button()
@@ -113,14 +151,31 @@ def internet(host="8.8.8.8", port=53, timeout=3):
     except:
         led.set_state(aiy.voicehat.LED.BLINK)
 
+def volumeUP(settings):
+    currentVolume = settings.getVolume()
+    schedule = settings.getSchedule()
+    volume = currentVolume + 2
+    settings.setVolume(volume)
+    settings.save()
+    aiy.audio.say('ok',volume=volume)
 
+def volumeDOWN(settings):
+    currentVolume = settings.getVolume()
+    schedule = settings.getSchedule()
+    volume = currentVolume - 2
+    settings.setVolume(volume)
+    settings.save()
+    aiy.audio.say('ok',volume=volume)
 
 def main():
+    
     recognizer = aiy.cloudspeech.get_recognizer()
     recognizer.expect_phrase('shutdown')
     recognizer.expect_phrase('restart')
     recognizer.expect_phrase('turn off')
     recognizer.expect_phrase('reboot')
+    recognizer.expect_phrase('volume up')
+    recognizer.expect_phrase('volume down')
     recognizer.expect_phrase('switch to the vacation schedule')
     recognizer.expect_phrase('switch to the school schedule')
     recognizer.expect_phrase('goodbye')
@@ -143,14 +198,17 @@ def main():
     
     while True:
         internet()
+        settings = assistantSettings()
+        currentVolume = settings.getVolume()
+        schedule = settings.getSchedule()
         button.wait_for_press()
         text = recognizer.recognize()
         if text is None:
             aiy.audio.say('I am sorry, I did not catch that, for help say help.',volume=currentVolume)
         else:
             if 'add a reminder' in text:
-                time = rtime()
-                message = rmessage()
+                time = rtime(settings)
+                message = rmessage(settings)
                 cronline = '{:s} /home/pi/AIY-projects-python/src/examples/voice/reminder_playback.py "{:s}"\n'.format(time,message)
                 with open('/home/pi/schedule.cronbak','a') as f:
                     f.write(cronline)
@@ -160,6 +218,10 @@ def main():
                 aiy.audio.say('This function is not yet implemented.',volume=currentVolume)
             elif 'switch to the school schedule' in text:
                 aiy.audio.say('This function is not yet implemented.',volume=currentVolume)
+            elif 'volume up' in text:
+                volumeUP(settings)
+            elif 'volume down' in text:
+                volumeDOWN(settings)
             elif 'shutdown' in text:
                 aiy.audio.say("Shutting down",volume=currentVolume)
                 os.system('sudo shutdown -h now')
@@ -178,6 +240,7 @@ def main():
                     f.write('XDG_RUNTIME_DIR=/run/user/1000\n')
                 aiy.audio.say("All reminders deleted")
             elif 'help' in text:
+                aiy.audio.say("To adjust the volume, say volume up or down", volume=currentVolume)
                 aiy.audio.say("To add a reminder say, add a reminder.", volume=currentVolume)
                 aiy.audio.say("To delete all reminders say, clear all reminders.", volume=currentVolume)
                 aiy.audio.say("To shut down the system, say shut down or turn off", volume=currentVolume)
