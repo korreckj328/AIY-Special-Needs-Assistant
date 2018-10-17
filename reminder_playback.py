@@ -17,20 +17,20 @@ class assistantSettings:
                 f.write('vacation')
             settingsArray.append('20')
             settingsArray.append('vacation')
-        self.__volume = int(settingsArray[0])
-        self.__schedule = settingsArray[1]
+        self.volume = int(settingsArray[0])
+        self.schedule = settingsArray[1]
     
     def setVolume(self, volume):
-        self.__volume = volume
+        self.volume = volume
     
     def getVolume(self):
-        return self.__volume
+        return self.volume
     
     def setSchedule(self, schedule):
-        self.__schedule = schedule
+        self.schedule = schedule
     
     def getSchedule(self):
-        return self.__schedule
+        return self.schedule
     
 
 def main():

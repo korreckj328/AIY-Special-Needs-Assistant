@@ -21,8 +21,9 @@ import aiy.voicehat
 import os
 import socket
 import time
+import threading
 
-class assistantSettings:
+class assistantSettings(object):
     def __init__(self):
         settingsArray = []
         try:
@@ -35,28 +36,35 @@ class assistantSettings:
                 f.write('vacation')
             settingsArray.append('20')
             settingsArray.append('vacation')
-        self.__volume = int(settingsArray[0])
-        self.__schedule = settingsArray[1]
+        self.volume = int(settingsArray[0])
+        self.schedule = settingsArray[1]
     
     def setVolume(self, volume):
-        self.__volume = volume
+        self.volume = volume
     
     def getVolume(self):
-        return self.__volume
+        return self.volume
     
     def setSchedule(self, schedule):
-        self.__schedule = schedule
+        self.schedule = schedule
     
     def getSchedule(self):
-        return self.__schedule
+        return self.schedule
     
     def save(self):
-        volumeString = str(self.__volume) + '\n'
+        volumeString = str(self.volume) + '\n'
         with open('/home/pi/.SpecialNeeds.config','w') as f:
             f.write(volumeString)
-            f.write(self.__schedule)
+            f.write(self.schedule)
     
+class myThread(threading.Thread):
+    def __init__(self,threadID,name):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
     
+    def run(self):
+        internet()
 
 def rtime(settings):
     currentVolume = settings.getVolume()
@@ -197,7 +205,8 @@ def main():
             f.write('XDG_RUNTIME_DIR=/run/user/1000\n')
     
     while True:
-        internet()
+        internetThread = myThread(1,'internetcheck')
+        internetThread.start()
         settings = assistantSettings()
         currentVolume = settings.getVolume()
         schedule = settings.getSchedule()
