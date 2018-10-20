@@ -64,7 +64,9 @@ class myThread(threading.Thread):
         self.name = name
     
     def run(self):
-        internet()
+        while True:
+            internet()
+            time.sleep(600)
 
 def rtime(settings):
     currentVolume = settings.getVolume()
@@ -204,9 +206,11 @@ def main():
         with open('/home/pi/schedule.cronbak','w') as f:
             f.write('XDG_RUNTIME_DIR=/run/user/1000\n')
     
+    internetThread = myThread(1,'internetcheck')
+    internetThread.start()
+    internetThread.join()
+    
     while True:
-        internetThread = myThread(1,'internetcheck')
-        internetThread.start()
         settings = assistantSettings()
         currentVolume = settings.getVolume()
         schedule = settings.getSchedule()
