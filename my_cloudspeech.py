@@ -208,7 +208,6 @@ def main():
     
     internetThread = myThread(1,'internetcheck')
     internetThread.start()
-    internetThread.join()
     
     while True:
         settings = assistantSettings()
