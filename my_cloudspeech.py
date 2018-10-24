@@ -32,9 +32,9 @@ class assistantSettings(object):
                     settingsArray.append(line)
         except:
             with open('/home/pi/.SpecialNeeds.config','w') as f:
-                f.write('20\n')
+                f.write('5\n')
                 f.write('vacation')
-            settingsArray.append('20')
+            settingsArray.append('5')
             settingsArray.append('vacation')
         self.volume = int(settingsArray[0])
         self.schedule = settingsArray[1]
@@ -86,7 +86,7 @@ def rtime(settings):
     elif len(time) == 3:
         time = time[0]+':'+time[1]+time[2]
     time = time.split(':')
-    aiy.audio.say('A M or P M?',volume=10)
+    aiy.audio.say('A M or P M?',volume=currentVolume)
     while True:
         button.wait_for_press()
         ampm = recognizer.recognize(immediate=True)
@@ -218,7 +218,7 @@ def main():
         if text is None:
             aiy.audio.say('I am sorry, I did not catch that, for help say help.',volume=currentVolume)
         else:
-            if 'add a reminder' in text:
+            if ('add' in text or 'create' in text) and 'reminder' in text:
                 time = rtime(settings)
                 message = rmessage(settings)
                 cronline = '{:s} /home/pi/AIY-projects-python/src/examples/voice/reminder_playback.py "{:s}"\n'.format(time,message)
@@ -226,9 +226,9 @@ def main():
                     f.write(cronline)
                 os.system('crontab /home/pi/schedule.cronbak')
                 aiy.audio.say('Your reminder is now set',volume=currentVolume)
-            elif 'switch to the vacation schedule' in text:
+            elif 'vacation' in text and 'schedule' in text:
                 aiy.audio.say('This function is not yet implemented.',volume=currentVolume)
-            elif 'switch to the school schedule' in text:
+            elif 'school' in text and 'schedule' in text:
                 aiy.audio.say('This function is not yet implemented.',volume=currentVolume)
             elif 'volume up' in text:
                 volumeUP(settings)
@@ -257,6 +257,8 @@ def main():
                 aiy.audio.say("To delete all reminders say, clear all reminders.", volume=currentVolume)
                 aiy.audio.say("To shut down the system, say shut down or turn off", volume=currentVolume)
                 aiy.audio.say("To restart the system, say reboot or restart", volume=currentVolume)
+            else:
+                aiy.audio.say('I am sorry, I did not catch that, for help say help.',volume=currentVolume)
 
 
 if __name__ == '__main__':
