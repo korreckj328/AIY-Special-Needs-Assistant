@@ -22,6 +22,7 @@ import os
 import socket
 import time
 import threading
+import sys
 
 class assistantSettings(object):
     def __init__(self):
@@ -66,7 +67,6 @@ class myThread(threading.Thread):
     def run(self):
         while True:
             internet()
-            time.sleep(600)
 
 def rtime(settings):
     currentVolume = settings.getVolume()
@@ -158,8 +158,10 @@ def internet(host="8.8.8.8", port=53, timeout=3):
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         led.set_state(aiy.voicehat.LED.ON)
+        time.sleep(600)
     except:
         led.set_state(aiy.voicehat.LED.BLINK)
+        time.sleep(30)
 
 def volumeUP(settings):
     currentVolume = settings.getVolume()
@@ -176,6 +178,15 @@ def volumeDOWN(settings):
     settings.setVolume(volume)
     settings.save()
     aiy.audio.say('ok',volume=volume)
+
+def cloudSpeechCheck(settings):
+    currentVolume = settings.getVolume()
+    try:
+        with open('/home/pi/cloud_speech.json','r') as f:
+            _ = f.read()
+    except:
+        aiy.audio.say('Cloud Speech is not setup.  Please follow the directions that came with your kit.', volume=currentVolume)
+        sys.exit(1)
 
 def main():
     
@@ -213,6 +224,7 @@ def main():
         settings = assistantSettings()
         currentVolume = settings.getVolume()
         schedule = settings.getSchedule()
+        cloudSpeechCheck(settings)
         button.wait_for_press()
         text = recognizer.recognize()
         if text is None:
